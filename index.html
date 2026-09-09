@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 학습 비서 (Full-Stack)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-10">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <!-- 사이드바: 대화 기록 -->
+        <div class="md:col-span-1 space-y-4">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">📜 대화 기록</h2>
+            <div id="conv-list" class="space-y-2 max-h-[700px] overflow-y-auto"></div>
+        </div>
+
+        <!-- 메인 영역 -->
+        <div class="md:col-span-3 space-y-6">
+            <h1 class="text-3xl font-bold text-blue-600 text-center">📝 AI 학습 비서</h1>
+
+            <!-- 요약 정보 -->
+            <div id="summary-box" class="bg-white p-4 rounded-lg shadow-sm border-t-4 border-green-500 grid grid-cols-2 gap-4 text-center">
+                <div><p class="text-xs text-gray-500">총 학습 횟수</p><p id="sum-count" class="text-xl font-bold">0회</p></div>
+                <div><p class="text-xs text-gray-500">총 학습 시간</p><p id="sum-minutes" class="text-xl font-bold">0분</p></div>
+            </div>
+
+            <!-- AI 피드백 영역 -->
+            <div id="ai-box" class="hidden bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded shadow-sm">
+                <div class="flex items-center mb-2 font-bold text-indigo-700">🤖 AI 분석 결과</div>
+                <p id="ai-feedback-text" class="text-gray-700 whitespace-pre-wrap text-sm"></p>
+            </div>
+
+            <!-- 입력 폼 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="subject" class="border p-2 rounded" placeholder="과목 (예: 파이썬)">
+                    <input type="number" id="minutes" class="border p-2 rounded" placeholder="시간 (분)">
+                </div>
+                <input type="date" id="date" class="border p-2 rounded w-full mb-4">
+                <div class="flex gap-2">
+                    <button id="btn-save" onclick="saveLog()" class="flex-1 bg-blue-500 text-white font-bold py-2 rounded hover:bg-blue-600">기록하기</button>
+                    <button id="btn-cancel" onclick="resetForm()" class="hidden bg-gray-400 text-white py-2 px-4 rounded">취소</button>
+                </div>
+                <button onclick="getAIFeedback()" class="w-full mt-2 bg-indigo-500 text-white font-bold py-2 rounded hover:bg-indigo-600">🤖 AI 학습 분석 받기</button>
+            </div>
+
+            <!-- 학습 기록 목록 -->
+            <div id="log-list" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        let isEditing = false;
+        document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+
+        async function loadAll() { loadLogs(); loadSummary(); loadConversations(); }
+
+        async function saveLog() {
+            const subject = document.getElementById('subject').value;
+            const minutes = document.getElementById('minutes').value;
+            const date = document.getElementById('date').value;
+            const editId = document.getElementById('edit-id').value;
+            if(!subject || !minutes) return alert("입력해주세요!");
+
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing ? `${API_URL}/api/data/${editId}` : `${API_URL}/api/data`;
+            await fetch(url, {
+                method, headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject, minutes: parseInt(minutes), date })
+            });
+            resetForm(); loadAll();
+        }
+
+        function prepareEdit(id, subject, minutes, date) {
+            isEditing = true;
+            document.getElementById('edit-id').value = id;
+            document.getElementById('subject').value = subject;
+            document.getElementById('minutes').value = minutes;
+            document.getElementById('date').value = date;
+            document.getElementById('btn-save').innerText = "수정 완료";
+            document.getElementById('btn-cancel').classList.remove('hidden');
+        }
+
+        function resetForm() {
+            isEditing = false;
+            document.getElementById('subject').value = '';
+            document.getElementById('minutes').value = '';
+            document.getElementById('btn-save').innerText = "기록하기";
+            document.getElementById('btn-cancel').classList.add('hidden');
+        }
+
+        async function loadLogs() {
+            const res = await fetch(`${API_URL}/api/data`);
+            const logs = await res.json();
+            const list = document.getElementById('log-list');
+            list.innerHTML = logs.map(log => `
+                <div class="bg-white p-4 rounded shadow flex justify-between items-center border-l-4 border-blue-400">
+                    <div><span class="font-bold">${log.subject}</span> <span class="text-sm text-gray-500 ml-2">${log.date} | ${log.minutes}분</span></div>
+                    <div class="text-sm"><button onclick="prepareEdit('${log.id}','${log.subject}',${log.minutes},'${log.date}')" class="text-blue-500 mr-2">수정</button>
+                    <button onclick="deleteLog('${log.id}')" class="text-red-400">삭제</button></div>
+                </div>`).join('');
+        }
+
+        async function loadSummary() {
+            const res = await fetch(`${API_URL}/api/data/summary`);
+            const data = await res.json();
+            document.getElementById('sum-count').innerText = `${data.total_count}회`;
+            document.getElementById('sum-minutes').innerText = `${data.total_minutes}분`;
+        }
+
+        async function loadConversations() {
+            const res = await fetch(`${API_URL}/api/conversations`);
+            const convs = await res.json();
+            const list = document.getElementById('conv-list');
+            list.innerHTML = convs.map(c => `
+                <div onclick="showDetail('${c.id}')" class="bg-white p-3 rounded shadow-sm text-xs border flex justify-between items-center cursor-pointer hover:border-blue-400">
+                    <div class="truncate flex-1"><p class="font-bold text-blue-600 truncate">${c.user_msg}</p></div>
+                    <button onclick="event.stopPropagation(); deleteConv('${c.id}')" class="text-gray-300 hover:text-red-500 ml-2">✕</button>
+                </div>`).join('');
+        }
+
+        async function showDetail(id) {
+            const res = await fetch(`${API_URL}/api/conversations/${id}`);
+            const data = await res.json();
+            document.getElementById('ai-box').classList.remove('hidden');
+            document.getElementById('ai-feedback-text').innerText = `질문: ${data.user_msg}\n\n답변: ${data.ai_msg}`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteLog(id) { if(confirm("삭제?")) { await fetch(`${API_URL}/api/data/${id}`, {method:'DELETE'}); loadAll(); } }
+        async function deleteConv(id) { if(confirm("대화 삭제?")) { await fetch(`${API_URL}/api/conversations/${id}`, {method:'DELETE'}); loadConversations(); } }
+
+        async function getAIFeedback() {
+            const msg = prompt("AI에게 물어보세요:", "내 학습 기록을 분석해줘!");
+            if(!msg) return;
+            document.getElementById('ai-box').classList.remove('hidden');
+            document.getElementById('ai-feedback-text').innerText = "분석 중...";
+            const res = await fetch(`${API_URL}/api/chat`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            document.getElementById('ai-feedback-text').innerText = data.answer;
+            loadConversations();
+        }
+
+        loadAll();
+    </script>
+</body>
+</html>
