@@ -4,55 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 학습 비서 (Full-Stack)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',sans-serif; background:#f3f4f6; min-height:100vh; padding:20px; color:#374151; }
+        .container { max-width:1024px; margin:0 auto; display:grid; grid-template-columns:1fr 3fr; gap:24px; }
+        @media (max-width:768px){ .container{ grid-template-columns:1fr; } }
+        h1{ color:#2563eb; text-align:center; font-size:28px; margin-bottom:20px; }
+        h2{ color:#1f2937; font-size:20px; margin-bottom:12px; }
+        .conv-list{ max-height:700px; overflow-y:auto; }
+        .conv-item{ background:#fff; padding:12px; border-radius:8px; border:1px solid #e5e7eb; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:13px; }
+        .conv-item:hover{ border-color:#60a5fa; }
+        .conv-item p{ font-weight:bold; color:#2563eb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .conv-del{ background:none; border:none; color:#d1d5db; cursor:pointer; margin-left:8px; }
+        .conv-del:hover{ color:#ef4444; }
+        .card{ background:#fff; padding:24px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:20px; }
+        .summary{ border-top:4px solid #22c55e; display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:center; padding:16px; }
+        .summary .label{ font-size:12px; color:#6b7280; }
+        .summary .value{ font-size:20px; font-weight:bold; }
+        .ai-box{ background:#eef2ff; border-left:4px solid #6366f1; padding:16px; border-radius:6px; margin-bottom:20px; }
+        .ai-box.hidden{ display:none; }
+        .ai-title{ font-weight:bold; color:#4338ca; margin-bottom:8px; }
+        .ai-text{ font-size:14px; white-space:pre-wrap; }
+        .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+        input{ border:1px solid #d1d5db; padding:8px; border-radius:6px; width:100%; font-size:14px; }
+        .mb{ margin-bottom:16px; }
+        .btn-row{ display:flex; gap:8px; }
+        button{ cursor:pointer; border:none; border-radius:6px; font-weight:bold; }
+        .btn-blue{ flex:1; background:#3b82f6; color:#fff; padding:8px; }
+        .btn-blue:hover{ background:#2563eb; }
+        .btn-gray{ background:#9ca3af; color:#fff; padding:8px 16px; }
+        .btn-gray.hidden{ display:none; }
+        .btn-indigo{ width:100%; margin-top:8px; background:#6366f1; color:#fff; padding:8px; }
+        .btn-indigo:hover{ background:#4f46e5; }
+        .log-item{ background:#fff; padding:16px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); border-left:4px solid #60a5fa; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+        .log-subject{ font-weight:bold; }
+        .log-meta{ font-size:13px; color:#6b7280; margin-left:8px; }
+        .link-edit{ background:none; color:#3b82f6; margin-right:8px; }
+        .link-del{ background:none; color:#f87171; }
+        .spinner{ display:inline-block; width:16px; height:16px; border:2px solid #ddd; border-top-color:#6366f1; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:6px; }
+        @keyframes spin{ to{ transform:rotate(360deg); } }
+        .loading-text{ color:#6b7280; font-size:13px; padding:8px; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-10">
-    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
-        
+<body>
+    <div class="container">
+
         <!-- 사이드바: 대화 기록 -->
-        <div class="md:col-span-1 space-y-4">
-            <h2 class="text-xl font-bold text-gray-800 flex items-center">📜 대화 기록</h2>
-            <div id="conv-list" class="space-y-2 max-h-[700px] overflow-y-auto"></div>
+        <div>
+            <h2>📜 대화 기록</h2>
+            <div id="conv-list" class="conv-list"></div>
         </div>
 
         <!-- 메인 영역 -->
-        <div class="md:col-span-3 space-y-6">
-            <h1 class="text-3xl font-bold text-blue-600 text-center">📝 AI 학습 비서</h1>
+        <div>
+            <h1>📝 AI 학습 비서</h1>
 
             <!-- 요약 정보 -->
-            <div id="summary-box" class="bg-white p-4 rounded-lg shadow-sm border-t-4 border-green-500 grid grid-cols-2 gap-4 text-center">
-                <div><p class="text-xs text-gray-500">총 학습 횟수</p><p id="sum-count" class="text-xl font-bold">0회</p></div>
-                <div><p class="text-xs text-gray-500">총 학습 시간</p><p id="sum-minutes" class="text-xl font-bold">0분</p></div>
+            <div class="card summary">
+                <div>
+                    <p class="label">총 학습 횟수</p>
+                    <p id="sum-count" class="value">0회</p>
+                </div>
+                <div>
+                    <p class="label">총 학습 시간</p>
+                    <p id="sum-minutes" class="value">0분</p>
+                </div>
             </div>
 
             <!-- AI 피드백 영역 -->
-            <div id="ai-box" class="hidden bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded shadow-sm">
-                <div class="flex items-center mb-2 font-bold text-indigo-700">🤖 AI 분석 결과</div>
-                <p id="ai-feedback-text" class="text-gray-700 whitespace-pre-wrap text-sm"></p>
+            <div id="ai-box" class="ai-box hidden">
+                <div class="ai-title">🤖 AI 분석 결과</div>
+                <p id="ai-feedback-text" class="ai-text"></p>
             </div>
 
             <!-- 입력 폼 -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="card">
                 <input type="hidden" id="edit-id">
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <input type="text" id="subject" class="border p-2 rounded" placeholder="과목 (예: 파이썬)">
-                    <input type="number" id="minutes" class="border p-2 rounded" placeholder="시간 (분)">
+                <div class="form-grid">
+                    <input type="text" id="subject" placeholder="과목 (예: 파이썬)">
+                    <input type="number" id="minutes" placeholder="시간 (분)">
                 </div>
-                <input type="date" id="date" class="border p-2 rounded w-full mb-4">
-                <div class="flex gap-2">
-                    <button id="btn-save" onclick="saveLog()" class="flex-1 bg-blue-500 text-white font-bold py-2 rounded hover:bg-blue-600">기록하기</button>
-                    <button id="btn-cancel" onclick="resetForm()" class="hidden bg-gray-400 text-white py-2 px-4 rounded">취소</button>
+                <input type="date" id="date" class="mb">
+                <div class="btn-row">
+                    <button id="btn-save" onclick="saveLog()" class="btn-blue">기록하기</button>
+                    <button id="btn-cancel" onclick="resetForm()" class="btn-gray hidden">취소</button>
                 </div>
-                <button onclick="getAIFeedback()" class="w-full mt-2 bg-indigo-500 text-white font-bold py-2 rounded hover:bg-indigo-600">🤖 AI 학습 분석 받기</button>
+                <button onclick="getAIFeedback()" class="btn-indigo">🤖 AI 학습 분석 받기</button>
             </div>
 
             <!-- 학습 기록 목록 -->
-            <div id="log-list" class="space-y-2"></div>
+            <div id="log-list"></div>
         </div>
     </div>
 
-    <script>
-        const API_URL = "http://127.0.0.1:8000";
+        <script>
+        const API_URL = "https://ai-study-assistant-2o8n.onrender.com";
         let isEditing = false;
         document.getElementById('date').value = new Date().toISOString().substring(0, 10);
 
@@ -65,12 +111,17 @@
             const editId = document.getElementById('edit-id').value;
             if(!subject || !minutes) return alert("입력해주세요!");
 
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true;
+            btn.innerText = "저장 중...";
+
             const method = isEditing ? 'PUT' : 'POST';
             const url = isEditing ? `${API_URL}/api/data/${editId}` : `${API_URL}/api/data`;
             await fetch(url, {
                 method, headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ subject, minutes: parseInt(minutes), date })
             });
+            btn.disabled = false;
             resetForm(); loadAll();
         }
 
@@ -93,14 +144,24 @@
         }
 
         async function loadLogs() {
+            const list = document.getElementById('log-list');
+            list.innerHTML = `<div class="loading-text"><span class="spinner"></span>기록 불러오는 중...</div>`;
             const res = await fetch(`${API_URL}/api/data`);
             const logs = await res.json();
-            const list = document.getElementById('log-list');
+            if(logs.length === 0) {
+                list.innerHTML = `<div class="loading-text">아직 기록이 없어요. 첫 기록을 남겨보세요! ✏️</div>`;
+                return;
+            }
             list.innerHTML = logs.map(log => `
-                <div class="bg-white p-4 rounded shadow flex justify-between items-center border-l-4 border-blue-400">
-                    <div><span class="font-bold">${log.subject}</span> <span class="text-sm text-gray-500 ml-2">${log.date} | ${log.minutes}분</span></div>
-                    <div class="text-sm"><button onclick="prepareEdit('${log.id}','${log.subject}',${log.minutes},'${log.date}')" class="text-blue-500 mr-2">수정</button>
-                    <button onclick="deleteLog('${log.id}')" class="text-red-400">삭제</button></div>
+                <div class="log-item">
+                    <div>
+                        <span class="log-subject">${log.subject}</span>
+                        <span class="log-meta">${log.date} | ${log.minutes}분</span>
+                    </div>
+                    <div>
+                        <button onclick="prepareEdit('${log.id}','${log.subject}',${log.minutes},'${log.date}')" class="link-edit">수정</button>
+                        <button onclick="deleteLog('${log.id}')" class="link-del">삭제</button>
+                    </div>
                 </div>`).join('');
         }
 
@@ -112,13 +173,20 @@
         }
 
         async function loadConversations() {
+            const list = document.getElementById('conv-list');
+            list.innerHTML = `<div class="loading-text"><span class="spinner"></span>불러오는 중...</div>`;
             const res = await fetch(`${API_URL}/api/conversations`);
             const convs = await res.json();
-            const list = document.getElementById('conv-list');
+            if(convs.length === 0) {
+                list.innerHTML = `<div class="loading-text">대화 기록이 없어요.</div>`;
+                return;
+            }
             list.innerHTML = convs.map(c => `
-                <div onclick="showDetail('${c.id}')" class="bg-white p-3 rounded shadow-sm text-xs border flex justify-between items-center cursor-pointer hover:border-blue-400">
-                    <div class="truncate flex-1"><p class="font-bold text-blue-600 truncate">${c.user_msg}</p></div>
-                    <button onclick="event.stopPropagation(); deleteConv('${c.id}')" class="text-gray-300 hover:text-red-500 ml-2">✕</button>
+                <div onclick="showDetail('${c.id}')" class="conv-item">
+                    <div style="flex:1; overflow:hidden;">
+                        <p>${c.user_msg}</p>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteConv('${c.id}')" class="conv-del">✕</button>
                 </div>`).join('');
         }
 
@@ -130,14 +198,26 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        async function deleteLog(id) { if(confirm("삭제?")) { await fetch(`${API_URL}/api/data/${id}`, {method:'DELETE'}); loadAll(); } }
-        async function deleteConv(id) { if(confirm("대화 삭제?")) { await fetch(`${API_URL}/api/conversations/${id}`, {method:'DELETE'}); loadConversations(); } }
+        async function deleteLog(id) {
+            if(confirm("삭제?")) {
+                await fetch(`${API_URL}/api/data/${id}`, {method:'DELETE'});
+                loadAll();
+            }
+        }
+
+        async function deleteConv(id) {
+            if(confirm("대화 삭제?")) {
+                await fetch(`${API_URL}/api/conversations/${id}`, {method:'DELETE'});
+                loadConversations();
+            }
+        }
 
         async function getAIFeedback() {
             const msg = prompt("AI에게 물어보세요:", "내 학습 기록을 분석해줘!");
             if(!msg) return;
             document.getElementById('ai-box').classList.remove('hidden');
-            document.getElementById('ai-feedback-text').innerText = "분석 중...";
+            document.getElementById('ai-feedback-text').innerHTML =
+                `<span class="spinner"></span>AI가 분석 중이에요... (서버가 자고 있으면 최대 1분 걸려요 😴)`;
             const res = await fetch(`${API_URL}/api/chat`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: msg })
