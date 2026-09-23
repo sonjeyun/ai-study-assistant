@@ -27,7 +27,7 @@ AI가 이 데이터를 분석해 **맞춤형 피드백**을 제공하는 풀스�
 
 | 구분 | 주소 |
 |------|------|
-| 🎨 **프론트엔드** | https://프로젝트이름.vercel.app |
+| 🎨 **프론트엔드** | [https://프로젝트이름.vercel.app](https://ai-study-assistant-beta-six.vercel.app/) |
 | 🔧 **백엔드 API** | https://ai-study-assistant-2o8n.onrender.com |
 | 📚 **Swagger 문서** | https://ai-study-assistant-2o8n.onrender.com/docs |
 
