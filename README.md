@@ -81,15 +81,21 @@ FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account", ...}
 
 ### 1. 데이터 요약이 보이는 채팅 화면 (질문 + 답변)
 > AI에게 질문하고, 학습 데이터 기반 답변을 받는 화면
-![채팅 화면](./screenshots/chat.png)
+
+<img width="768" height="159" alt="image" src="https://github.com/user-attachments/assets/b630a052-fc9d-4f2c-aecc-b0ad0a14975e" />
+
 
 ### 2. 데이터 관리 화면 (CRUD 동작)
 > 학습 기록 추가/수정/삭제가 동작하는 화면
-![데이터 관리](./screenshots/crud.png)
+
+<img width="813" height="564" alt="image" src="https://github.com/user-attachments/assets/ae1ac76c-38e6-4d0c-8e30-eb3fc629505c" />
+
 
 ### 3. 대화 기록 화면 (불러오기 동작)
 > 저장된 과거 대화를 클릭해 다시 불러오는 화면
-![대화 기록](./screenshots/conversations.png)
+
+
+<img width="280" height="214" alt="image" src="https://github.com/user-attachments/assets/e85d5069-0a7d-4410-85af-c0a1c2d3ab4f" />
 
 ---
 
