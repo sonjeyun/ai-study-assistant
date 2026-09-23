@@ -82,6 +82,10 @@ FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account", ...}
 ### 1. 데이터 요약이 보이는 채팅 화면 (질문 + 답변)
 > AI에게 질문하고, 학습 데이터 기반 답변을 받는 화면
 
+
+<img width="814" height="611" alt="image" src="https://github.com/user-attachments/assets/d33c302a-61e9-4140-8afd-f67a7af1e6b2" />
+
+
 <img width="768" height="159" alt="image" src="https://github.com/user-attachments/assets/b630a052-fc9d-4f2c-aecc-b0ad0a14975e" />
 
 
