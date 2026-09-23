@@ -16,7 +16,7 @@ AI가 이 데이터를 분석해 **맞춤형 피드백**을 제공하는 풀스�
 | 구분 | 기술 |
 |------|------|
 | **Frontend** | HTML, CSS, JavaScript (Vanilla) |
-| **Backend** | Python 3.10, FastAPI |
+| **Backend** | Python 3.10 이상, FastAPI |
 | **Database** | Firebase Firestore |
 | **AI** | OpenAI SDK (Codyssey API, gpt-5-mini) |
 | **배포** | Vercel(프론트) / Render(백엔드) |
