@@ -31,7 +31,7 @@ AI가 이 데이터를 분석해 **맞춤형 피드백**을 제공하는 풀스�
 | 🔧 **백엔드 API** | https://ai-study-assistant-2o8n.onrender.com |
 | 📚 **Swagger 문서** | https://ai-study-assistant-2o8n.onrender.com/docs |
 
-> ⚠️ Vercel 주소는 본인 실제 주소로 교체하세요!
+> 
 
 ---
 
